@@ -97,6 +97,13 @@ class User(BaseModel):
     card: PaymentCardNumber = Field(
         ...,
         title="Payment Card")
+    password: str = Field(..., min_length=2)
+
+
+class User2(BaseModel):
+    first_name = str
+    last_name = str
+    password: str = Field(..., min_length=2)
 
 
 # Path decoration operator
@@ -166,3 +173,11 @@ def validation_params_body(person_id: int = Path(..., title='Id Body'),
     # Unimos los diccionarios
     results.update(location.dict())
     return results
+
+
+# Se define que que atributos se deben excluir del return
+@app.post('/create-user-2',
+          response_model_exclude={'password'},
+          status_code=200)  # Definiendo el tipo de code a retornar
+def create_user(user: User2 = Body(...), ):
+    return user
