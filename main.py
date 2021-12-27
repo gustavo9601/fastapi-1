@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field, EmailStr, PaymentCardNumber, PositiveFloat
-from fastapi import FastAPI, Body, Query, Path
+from fastapi import FastAPI, Body, Query, Path, Form, Header, Cookie, UploadFile, File
 from typing import Dict, Optional, List
 from enum import Enum
+import shutil
 
 """
 Execute app in console
@@ -106,6 +107,12 @@ class User2(BaseModel):
     password: str = Field(..., min_length=2)
 
 
+class LoginOut(BaseModel):
+    username: str = Field(..., max_length=20, example='gus')
+    password: str = Field(..., min_length=2, max_length=20, example='123')
+    message: str = Field(default='Login successful', description='Message to return to the user')
+
+
 # Path decoration operator
 @app.get('/')
 def home() -> Dict[str, str]:
@@ -181,3 +188,80 @@ def validation_params_body(person_id: int = Path(..., title='Id Body'),
           status_code=200)  # Definiendo el tipo de code a retornar
 def create_user(user: User2 = Body(...), ):
     return user
+
+
+"""
+Form => permite recibir datos desde un formulario hasta archivos
+"""
+
+
+@app.post(
+    path='/login',
+    response_model=LoginOut,
+    status_code=200,
+    response_model_exclude={'password'},
+)
+def login(username: str = Form(...), password=Form(...)):
+    return LoginOut(username=username, password=password)
+
+
+"""
+Cookies and headers
+"""
+
+
+@app.post(path='/contact',
+          status_code=200)
+def contact(
+        first_name: str = Form(..., max_length=20, min_length=1),
+        last_name: str = Form(..., max_length=20, min_length=1),
+        email: EmailStr = Form(...),
+        message: str = Form(..., min_length=20),
+        user_agent_header: Optional[str] = Header(default=None),
+        cookie_ads: Optional[str] = Cookie(default=None)
+):
+    return {
+        "status": "ok",
+        "data": {
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "message": message,
+            "user_agent_header": user_agent_header,
+            "cookie_ads": cookie_ads
+        }
+    }
+
+
+"""
+Uploading files
+"""
+
+
+@app.post(path='/upload-file')
+async def upload_file(
+        image: UploadFile = File(...)
+):
+    with open('./files/' + image.filename, 'wb') as buffer:
+        shutil.copyfileobj(image.file, buffer)
+
+    return {
+        "filename": image.filename,
+        "format": image.content_type,
+        "size(kb)": round(len(image.file.read()) / 1024, ndigits=2),  # Obtiene la cantidad de bytes
+    }
+
+
+@app.post(
+    path='/upload-multiple-files'
+)
+def upload_multiple_files(
+        images: List[UploadFile] = File(...)
+):
+    info_images = [{
+        "filename": image.filename,
+        "Format": image.content_type,
+        "Size(kb)": round(len(image.file.read()) / 1024, ndigits=2)
+    } for image in images]
+
+    return info_images
