@@ -144,7 +144,8 @@ Query(
 """
 
 
-@app.get('/players/details')
+@app.get('/players/details',
+          tags=['Players'])
 def show_players(
         first_name: Optional[str] = Query(None, min_length=1, max_length=10),
         age: int = Query(...)
@@ -156,13 +157,15 @@ def show_players(
 
 
 # Request and Response Body
-@app.post('/players')
+@app.post('/players',
+          tags=['Players'])
 # Body(...) // ... significa que el body request es obligatorio
 def create_player(player: Player = Body(...)) -> Player:
     return player
 
 
-@app.get('players_full/{player_id}')
+@app.get('players_full/{player_id}',
+          tags=['Players'])
 # gt = 0 // greater than 0
 def get_players_full(player_id: int = Path(..., gt=0, title='ID player', description='Id player en entero')):
     return {
@@ -235,13 +238,31 @@ def contact(
 
 """
 Uploading files
+
+
+tags=['Uploads_files'] // permite agrupar los paths por tag
+summary='Upload File (Image)' // titulo en la documentacion
 """
 
 
-@app.post(path='/upload-file')
+@app.post(path='/upload-file',
+          summary='Upload File (Image)',
+          tags=['Uploads_files'])
 async def upload_file(
         image: UploadFile = File(...)
 ):
+    """
+    Upload File to server
+
+    This path operation allow to upload any files into the server
+
+    Parameters:
+    - Request body parameter
+        - **image: UploadFile** -> Binary File
+    Returns:
+    - Return dict with information of the file uploaded
+
+    """
     with open('./files/' + image.filename, 'wb') as buffer:
         shutil.copyfileobj(image.file, buffer)
 
@@ -253,7 +274,8 @@ async def upload_file(
 
 
 @app.post(
-    path='/upload-multiple-files'
+    path='/upload-multiple-files',
+    tags=['Uploads_files']
 )
 def upload_multiple_files(
         images: List[UploadFile] = File(...)
@@ -277,3 +299,13 @@ def error_request(age: int):
     return {
         "status": "ok"
     }
+
+"""
+deprecated=True // deja sin efecto un path, y lo muestra tachado en la documentacion
+"""
+@app.get('/path-deprecated', deprecated=True)
+def deprecated_path():
+    return {
+        "data": False
+    }
+
