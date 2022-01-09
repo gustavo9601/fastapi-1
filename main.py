@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, EmailStr, PaymentCardNumber, PositiveFloat
-from fastapi import FastAPI, Body, Query, Path, Form, Header, Cookie, UploadFile, File
+from fastapi import FastAPI, Body, Query, Path, Form, Header, Cookie, UploadFile, File, HTTPException
 from typing import Dict, Optional, List
 from enum import Enum
 import shutil
@@ -265,3 +265,15 @@ def upload_multiple_files(
     } for image in images]
 
     return info_images
+
+
+@app.get(path='/error-request/{age}')
+def error_request(age: int):
+    if (age < 18):
+        raise HTTPException(
+            status_code=500,
+            detail='This person is less than 18 years old, you should be mayor'
+        )
+    return {
+        "status": "ok"
+    }
