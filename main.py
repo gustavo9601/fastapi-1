@@ -145,7 +145,7 @@ Query(
 
 
 @app.get('/players/details',
-          tags=['Players'])
+         tags=['Players'])
 def show_players(
         first_name: Optional[str] = Query(None, min_length=1, max_length=10),
         age: int = Query(...)
@@ -165,7 +165,7 @@ def create_player(player: Player = Body(...)) -> Player:
 
 
 @app.get('players_full/{player_id}',
-          tags=['Players'])
+         tags=['Players'])
 # gt = 0 // greater than 0
 def get_players_full(player_id: int = Path(..., gt=0, title='ID player', description='Id player en entero')):
     return {
@@ -300,12 +300,14 @@ def error_request(age: int):
         "status": "ok"
     }
 
+
 """
 deprecated=True // deja sin efecto un path, y lo muestra tachado en la documentacion
 """
+
+
 @app.get('/path-deprecated', deprecated=True)
 def deprecated_path():
     return {
         "data": False
     }
-
